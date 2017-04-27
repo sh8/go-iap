@@ -29,8 +29,8 @@ type IAPClient interface {
 
 // Client implements IAPClient
 type Client struct {
-	URL     string
-	TimeOut time.Duration
+	URL    string
+	Client *http.Client
 }
 
 // HandleError returns error message by status code
@@ -68,9 +68,12 @@ func HandleError(status int) error {
 
 // New creates a client object
 func New() Client {
+	httpClient := http.Client{
+		Timeout: time.Second * 5,
+	}
 	client := Client{
-		URL:     SandboxURL,
-		TimeOut: time.Second * 5,
+		URL:    SandboxURL,
+		Client: httpClient,
 	}
 	if os.Getenv("IAP_ENVIRONMENT") == "production" {
 		client.URL = ProductionURL
@@ -84,9 +87,12 @@ func NewWithConfig(config Config) Client {
 		config.TimeOut = time.Second * 5
 	}
 
-	client := Client{
-		URL:     SandboxURL,
+	httpClient := http.Client{
 		TimeOut: config.TimeOut,
+	}
+	client := Client{
+		URL:    SandboxURL,
+		Client: httpClient,
 	}
 	if config.IsProduction {
 		client.URL = ProductionURL
@@ -95,11 +101,13 @@ func NewWithConfig(config Config) Client {
 	return client
 }
 
+func (c *Client) SetClient(client *http.Client) {
+	c.Client = client
+}
+
 // Verify sends receipts and gets validation result
 func (c *Client) Verify(req IAPRequest, result interface{}) error {
-	client := http.Client{
-		Timeout: c.TimeOut,
-	}
+	client := c.Client
 
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(req)
