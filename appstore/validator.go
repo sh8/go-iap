@@ -68,7 +68,7 @@ func HandleError(status int) error {
 
 // New creates a client object
 func New() Client {
-	httpClient := http.Client{
+	httpClient := &http.Client{
 		Timeout: time.Second * 5,
 	}
 	client := Client{
@@ -87,8 +87,8 @@ func NewWithConfig(config Config) Client {
 		config.TimeOut = time.Second * 5
 	}
 
-	httpClient := http.Client{
-		TimeOut: config.TimeOut,
+	httpClient := &http.Client{
+		Timeout: config.TimeOut,
 	}
 	client := Client{
 		URL:    SandboxURL,
